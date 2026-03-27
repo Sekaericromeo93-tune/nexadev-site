@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="NexaDev CI — Solutions numériques professionnelles à Abidjan. Développement web, applications sur mesure, e-commerce.">
+<meta name="robots" content="index, follow">
+<meta property="og:title" content="NexaDev CI — Solutions Numériques">
+<meta property="og:description" content="Développement web professionnel, applications sur mesure à Abidjan.">
+<meta property="og:type" content="website">
+<title>NexaDev CI — Solutions Numériques · Abidjan</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+/* ── CONFIG ── */
+:root {
+  --or:#C9A84C; --or-clair:#E8C97A; --noir:#080808;
+  --noir2:#0f0f0f; --noir3:#161616; --gris:#2a2a2a;
+  --blanc:#fafafa; --b60:rgba(250,250,250,0.6);
+  --b30:rgba(250,250,250,0.3); --b10:rgba(250,250,250,0.07);
+  --or10:rgba(201,168,76,0.1); --or20:rgba(201,168,76,0.2);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--noir);color:var(--blanc);font-family:'DM Sans',sans-serif;overflow-x:hidden;cursor:none}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");opacity:0.025;pointer-events:none;z-index:1}
+::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-thumb{background:var(--or)}
+
+/* CURSOR */
+.cur{width:8px;height:8px;background:var(--or);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9999;transform:translate(-50%,-50%)}
+.cur-ring{width:32px;height:32px;border:1px solid rgba(201,168,76,0.5);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:transform 0.3s ease,width 0.25s,height 0.25s,border-color 0.25s}
+.cur-ring.h{width:50px;height:50px;border-color:var(--or)}
+a,button,select{cursor:none}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:22px 60px;display:flex;align-items:center;justify-content:space-between;transition:all 0.4s}
+nav.sc{background:rgba(8,8,8,0.93);backdrop-filter:blur(20px);padding:14px 60px;border-bottom:1px solid var(--or20)}
+.n-logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;text-decoration:none;color:var(--blanc)}
+.n-logo span{color:var(--or)}
+.n-links{display:flex;gap:34px;list-style:none}
+.n-link{color:var(--b60);text-decoration:none;font-size:13px;font-weight:500;letter-spacing:.4px;position:relative;transition:color .3s}
+.n-link::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:1px;background:var(--or);transition:width .3s}
+.n-link:hover{color:var(--blanc)} .n-link:hover::after{width:100%}
+.n-cta{background:transparent;border:1px solid var(--or);color:var(--or);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:10px 22px;text-decoration:none;transition:all .3s}
+.n-cta:hover{background:var(--or);color:var(--noir)}
+
+/* HERO */
+#hero{min-height:100vh;display:flex;align-items:center;padding:0 60px;position:relative;overflow:hidden}
+.h-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 70% 50%,rgba(201,168,76,.06),transparent),radial-gradient(ellipse 40% 40% at 10% 80%,rgba(201,168,76,.04),transparent)}
+.h-grid{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(201,168,76,.15) 1px,transparent 1px);background-size:40px 40px;mask-image:radial-gradient(ellipse 70% 70% at 60% 50%,black 30%,transparent 70%);opacity:.4}
+.h-content{position:relative;z-index:2;max-width:700px}
+.h-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--or20);background:var(--or10);padding:6px 16px;font-size:11px;letter-spacing:3px;color:var(--or-clair);text-transform:uppercase;margin-bottom:28px;opacity:0;animation:fUp .8s .2s forwards}
+.h-badge::before{content:'';width:6px;height:6px;background:var(--or);border-radius:50%;animation:pulse 2s infinite}
+.h-title{font-family:'Cormorant Garamond',serif;font-size:clamp(46px,7vw,86px);font-weight:700;line-height:1.05;margin-bottom:22px;opacity:0;animation:fUp .9s .4s forwards}
+.h-title em{font-style:italic;color:var(--or);display:block}
+.h-sub{font-size:15px;line-height:1.75;color:var(--b60);max-width:500px;margin-bottom:44px;opacity:0;animation:fUp .9s .6s forwards}
+.h-actions{display:flex;gap:16px;align-items:center;opacity:0;animation:fUp .9s .8s forwards}
+.btn-p{background:var(--or);color:var(--noir);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:15px 34px;text-decoration:none;position:relative;overflow:hidden;transition:transform .2s;display:inline-block}
+.btn-p::before{content:'';position:absolute;inset:0;background:var(--or-clair);transform:translateX(-101%);transition:transform .35s ease}
+.btn-p:hover{transform:translateY(-2px)} .btn-p:hover::before{transform:translateX(0)}
+.btn-p span{position:relative;z-index:1}
+.btn-g{color:var(--b60);font-size:13px;text-decoration:none;display:flex;align-items:center;gap:8px;transition:color .3s}
+.btn-g:hover{color:var(--or)}
+.h-stats{position:absolute;right:60px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:28px;opacity:0;animation:fR 1s 1s forwards}
+.s-num{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:700;color:var(--or);line-height:1;text-align:center}
+.s-lbl{font-size:9px;letter-spacing:2px;color:var(--b30);text-transform:uppercase;margin-top:4px;text-align:center}
+.s-div{width:1px;height:28px;background:linear-gradient(180deg,transparent,var(--or20),transparent);margin:0 auto}
+.scroll-i{position:absolute;bottom:36px;left:60px;display:flex;align-items:center;gap:10px;font-size:9px;letter-spacing:3px;color:var(--b30);text-transform:uppercase;opacity:0;animation:fUp 1s 1.2s forwards}
+.s-line{width:36px;height:1px;background:linear-gradient(90deg,var(--or),transparent)}
+
+@keyframes fUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fR{from{opacity:0;transform:translate(28px,-50%)}to{opacity:1;transform:translate(0,-50%)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+
+/* SECTIONS */
+section{padding:110px 60px;position:relative}
+.s-eye{font-size:9px;letter-spacing:4px;color:var(--or);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.s-eye::before{content:'';width:24px;height:1px;background:var(--or)}
+.s-tit{font-family:'Cormorant Garamond',serif;font-size:clamp(34px,4.5vw,56px);font-weight:700;line-height:1.1;margin-bottom:14px}
+.s-tit em{font-style:italic;color:var(--or)}
+.s-sub{font-size:14px;color:var(--b60);line-height:1.7;max-width:460px}
+.reveal{opacity:0;transform:translateY(36px);transition:opacity .8s ease,transform .8s ease}
+.reveal.v{opacity:1;transform:translateY(0)}
+.d1{transition-delay:.1s}.d2{transition-delay:.25s}.d3{transition-delay:.4s}.d4{transition-delay:.55s}
+.gold-div{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--or),transparent);opacity:.25}
+
+/* SERVICES */
+#services{background:var(--noir2)}
+.srv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:64px}
+.srv-card{background:var(--noir3);padding:40px 32px;position:relative;overflow:hidden;transition:background .4s;border:1px solid transparent}
+.srv-card:hover{background:var(--noir);border-color:var(--or20)}
+.srv-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--or10),transparent);opacity:0;transition:opacity .4s}
+.srv-card:hover::before{opacity:1}
+.srv-n{font-family:'Cormorant Garamond',serif;font-size:60px;font-weight:700;color:rgba(201,168,76,.08);position:absolute;top:16px;right:24px;line-height:1;transition:color .4s}
+.srv-card:hover .srv-n{color:rgba(201,168,76,.15)}
+.srv-ico{width:44px;height:44px;border:1px solid var(--or20);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:20px;transition:all .3s}
+.srv-card:hover .srv-ico{border-color:var(--or);background:var(--or10)}
+.srv-card h3{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;margin-bottom:10px;position:relative;z-index:1}
+.srv-card p{font-size:13px;color:var(--b60);line-height:1.65;position:relative;z-index:1}
+.srv-line{position:absolute;bottom:0;left:0;width:0;height:2px;background:linear-gradient(90deg,var(--or),var(--or-clair));transition:width .5s ease}
+.srv-card:hover .srv-line{width:100%}
+
+/* POURQUOI */
+#pourquoi{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center}
+.pq-box{background:var(--noir3);border:1px solid var(--or20);padding:52px 40px;position:relative}
+.pq-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--or),var(--or-clair),var(--or))}
+.pq-box blockquote{font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;line-height:1.65;color:var(--blanc)}
+.pq-box blockquote em{color:var(--or);font-style:normal}
+.pq-acc{position:absolute;bottom:-18px;right:-18px;width:110px;height:110px;border:1px solid var(--or20);background:var(--noir);display:flex;align-items:center;justify-content:center}
+.pq-acc span{font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:700;color:var(--or);text-align:center;line-height:1.4}
+.why-list{display:flex;flex-direction:column;gap:14px;margin-top:40px}
+.why-i{display:flex;gap:16px;align-items:flex-start;padding:20px;background:var(--noir3);border:1px solid transparent;transition:all .3s}
+.why-i:hover{border-color:var(--or20);transform:translateX(5px)}
+.why-dot{width:32px;height:32px;flex-shrink:0;border:1px solid var(--or);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--or);font-family:'Cormorant Garamond',serif;font-weight:700}
+.why-i h4{font-size:13px;font-weight:600;margin-bottom:3px}
+.why-i p{font-size:12px;color:var(--b60);line-height:1.6}
+
+/* PROCESSUS */
+#processus{background:var(--noir2)}
+.proc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:64px;position:relative}
+.proc-grid::before{content:'';position:absolute;top:27px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.3),var(--or),rgba(201,168,76,.3),transparent)}
+.p-step{padding:0 22px}
+.p-num-w{width:54px;height:54px;border:1px solid var(--or);background:var(--noir2);display:flex;align-items:center;justify-content:center;margin-bottom:24px;position:relative;z-index:1;transition:background .3s}
+.p-step:hover .p-num-w{background:var(--or10)}
+.p-num{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--or)}
+.p-step h3{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;margin-bottom:8px}
+.p-step p{font-size:12.5px;color:var(--b60);line-height:1.65}
+
+/* FORMULES */
+.pkg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:64px}
+.pkg{background:var(--noir3);border:1px solid var(--gris);padding:40px 32px;position:relative;overflow:hidden;transition:all .3s;display:flex;flex-direction:column}
+.pkg.ft{border-color:var(--or);background:linear-gradient(135deg,#151008,var(--noir3))}
+.pkg.ft::after{content:'POPULAIRE';position:absolute;top:18px;right:18px;background:var(--or);color:var(--noir);font-size:8px;font-weight:700;letter-spacing:2px;padding:3px 9px}
+.pkg:hover{transform:translateY(-6px);border-color:var(--or)}
+.pkg::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--or),transparent);opacity:0;transition:opacity .3s}
+.pkg:hover::before,.pkg.ft::before{opacity:1}
+.pkg-ico{font-size:28px;margin-bottom:16px}
+.pkg-name{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;margin-bottom:2px}
+.pkg-sub{font-size:10px;letter-spacing:2px;color:var(--or);text-transform:uppercase;margin-bottom:14px}
+.pkg-desc{font-size:12.5px;color:var(--b60);line-height:1.65;margin-bottom:22px;flex:1}
+.pkg-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:26px}
+.pkg-tag{font-size:9.5px;color:var(--or-clair);border:1px solid var(--or20);padding:2px 9px;letter-spacing:.3px}
+.pkg-btn{display:block;text-align:center;border:1px solid var(--or);color:var(--or);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px;text-decoration:none;transition:all .3s}
+.pkg.ft .pkg-btn{background:var(--or);color:var(--noir)}
+.pkg-btn:hover{background:var(--or);color:var(--noir)}
+
+/* ── SECTION ATOUTS SUPPRIMÉE : doublon avec #pourquoi ── */
+
+/* CONTACT */
+#contact{display:grid;grid-template-columns:1fr 1.2fr;gap:72px;align-items:start}
+.c-tit{font-family:'Cormorant Garamond',serif;font-size:clamp(32px,4vw,50px);font-weight:700;line-height:1.1;margin-bottom:18px}
+.c-tit em{font-style:italic;color:var(--or)}
+.c-desc{font-size:14px;color:var(--b60);line-height:1.75;margin-bottom:36px;max-width:380px}
+.c-items{display:flex;flex-direction:column;gap:14px}
+.c-item{display:flex;gap:14px;align-items:flex-start;padding:18px 20px;background:var(--noir3);border:1px solid var(--gris);transition:border-color .3s}
+.c-item:hover{border-color:var(--or20)}
+.c-ico{font-size:18px;flex-shrink:0;margin-top:2px}
+.c-item strong{display:block;font-size:11px;color:var(--blanc);font-weight:600;margin-bottom:1px}
+.c-item span{font-size:12.5px;color:var(--b60)}
+/* FIX : lien cliquable dans contact */
+.c-item a{font-size:12.5px;color:var(--b60);text-decoration:none;transition:color .3s;cursor:none}
+.c-item a:hover{color:var(--or)}
+.c-form{display:flex;flex-direction:column;gap:14px}
+.f-grp{display:flex;flex-direction:column;gap:6px}
+.f-lbl{font-size:10px;letter-spacing:2px;color:var(--or);text-transform:uppercase}
+.f-grp input,.f-grp textarea,.f-grp select{background:var(--noir3);border:1px solid var(--gris);color:var(--blanc);font-family:'DM Sans',sans-serif;font-size:13px;padding:13px 16px;outline:none;transition:border-color .3s;resize:none;-webkit-appearance:none;border-radius:0}
+.f-grp input:focus,.f-grp textarea:focus,.f-grp select:focus{border-color:var(--or)}
+.f-grp option{background:var(--noir3);color:var(--blanc)}
+.f-grp textarea{min-height:110px}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.f-btn{background:var(--or);color:var(--noir);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border:none;padding:16px 36px;width:100%;position:relative;overflow:hidden;transition:transform .2s}
+.f-btn:hover{transform:translateY(-2px)}
+.f-btn::before{content:'';position:absolute;inset:0;background:var(--or-clair);transform:translateX(-101%);transition:transform .35s ease}
+.f-btn:hover::before{transform:translateX(0)}
+.f-btn span{position:relative;z-index:1}
+.f-btn:disabled{opacity:.6;transform:none}
+.f-ok{display:none;background:rgba(201,168,76,.08);border:1px solid var(--or20);padding:16px 20px;color:var(--or-clair);font-size:13px;text-align:center;margin-top:8px}
+.f-err{display:none;background:rgba(200,50,50,.08);border:1px solid rgba(200,50,50,.3);padding:16px 20px;color:#f87;font-size:13px;text-align:center;margin-top:8px}
+
+/* FOOTER */
+footer{background:var(--noir2);border-top:1px solid var(--gris);padding:36px 60px;display:flex;align-items:center;justify-content:space-between}
+.f-logo{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--blanc);text-decoration:none}
+.f-logo span{color:var(--or)}
+.f-copy{font-size:11px;color:var(--b30)}
+.f-links{display:flex;gap:20px}
+.f-lnk{font-size:11px;color:var(--b30);text-decoration:none;transition:color .3s}
+.f-lnk:hover{color:var(--or)}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  nav{padding:16px 24px} nav.sc{padding:12px 24px}
+  .n-links,.h-stats,.scroll-i{display:none}
+  section,#hero,#pourquoi,#contact{padding:72px 24px!important}
+  .srv-grid,.pkg-grid{grid-template-columns:1fr}
+  #pourquoi,#contact{grid-template-columns:1fr}
+  .pq-box{display:none}
+  .proc-grid{grid-template-columns:1fr 1fr}
+  footer{flex-direction:column;gap:12px;text-align:center;padding:24px}
+  .f-links{flex-wrap:wrap;justify-content:center}
+  .f-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- CURSEUR -->
+<div class="cur" id="curDot"></div>
+<div class="cur-ring" id="curRing"></div>
+
+<!-- NAVBAR -->
+<nav id="nav">
+  <a href="#hero" class="n-logo">Nexa<span>Dev</span> CI</a>
+  <ul class="n-links">
+    <li><a href="#services" class="n-link">Services</a></li>
+    <li><a href="#pourquoi" class="n-link">Pourquoi nous</a></li>
+    <li><a href="#processus" class="n-link">Processus</a></li>
+    <li><a href="#formules" class="n-link">Formules</a></li>
+    <li><a href="#contact" class="n-link">Contact</a></li>
+  </ul>
+  <a href="#contact" class="n-cta">Démarrer un projet</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="h-bg"></div><div class="h-grid"></div>
+  <div class="h-content">
+    <div class="h-badge">Solutions Numériques · Abidjan</div>
+    <h1 class="h-title">Votre vision<br>digitale, <em>concrétisée.</em></h1>
+    <p class="h-sub">NexaDev CI conçoit des applications web, sites professionnels et plateformes sur mesure — avec une exécution irréprochable et des résultats mesurables.</p>
+    <div class="h-actions">
+      <a href="#contact" class="btn-p"><span>Démarrer un projet</span></a>
+      <a href="#services" class="btn-g">Découvrir nos services <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
+  </div>
+  <!-- FIX : data-to="6" (6 services réels) + IDs uniques pour les compteurs -->
+  <div class="h-stats">
+    <div><div class="s-num" id="cnt-100" data-to="100">0</div><div class="s-lbl">% Sur mesure</div></div>
+    <div class="s-div"></div>
+    <div><div class="s-num" id="cnt-24" data-to="24">0</div><div class="s-lbl">H Devis offert</div></div>
+    <div class="s-div"></div>
+    <div><div class="s-num" id="cnt-6" data-to="6">0</div><div class="s-lbl">Services clés</div></div>
+  </div>
+  <div class="scroll-i"><div class="s-line"></div>Défiler</div>
+</section>
+<div class="gold-div"></div>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="reveal"><div class="s-eye">Ce que nous faisons</div><h2 class="s-tit">Nos <em>Services</em></h2><p class="s-sub">Solutions digitales complètes pensées pour les besoins réels des entreprises modernes.</p></div>
+  <div class="srv-grid">
+    <div class="srv-card reveal d1"><div class="srv-n">01</div><div class="srv-ico">🌐</div><h3>Sites Web Professionnels</h3><p>Sites vitrines, portfolios et landing pages modernes, responsives et optimisés pour la performance.</p><div class="srv-line"></div></div>
+    <div class="srv-card reveal d2"><div class="srv-n">02</div><div class="srv-ico">⚙️</div><h3>Applications Web</h3><p>Applications métier, tableaux de bord interactifs et outils de gestion sur mesure pour votre activité.</p><div class="srv-line"></div></div>
+    <div class="srv-card reveal d3"><div class="srv-n">03</div><div class="srv-ico">🛒</div><h3>E-Commerce</h3><p>Boutiques en ligne complètes avec gestion produits, commandes, paiements Mobile Money intégrés.</p><div class="srv-line"></div></div>
+    <div class="srv-card reveal d1"><div class="srv-n">04</div><div class="srv-ico">🎨</div><h3>Design UI/UX</h3><p>Interfaces intuitives et esthétiques pensées pour la fluidité, l'expérience et la conversion client.</p><div class="srv-line"></div></div>
+    <div class="srv-card reveal d2"><div class="srv-n">05</div><div class="srv-ico">🔧</div><h3>Maintenance & Support</h3><p>Mises à jour, correction de bugs, hébergement et assistance technique réactive post-livraison.</p><div class="srv-line"></div></div>
+    <div class="srv-card reveal d3"><div class="srv-n">06</div><div class="srv-ico">💡</div><h3>Conseil Digital</h3><p>Audit numérique, stratégie digitale et accompagnement dans la transformation de votre activité.</p><div class="srv-line"></div></div>
+  </div>
+</section>
+<div class="gold-div"></div>
+
+<!-- POURQUOI -->
+<section id="pourquoi" style="padding:110px 60px">
+  <div class="pq-box reveal">
+    <blockquote>« Votre succès digital commence par <em>une conversation.</em> Nous transformons vos idées en solutions numériques concrètes, performantes et durables. »</blockquote>
+    <div class="pq-acc"><span>100%<br>Sur<br>Mesure</span></div>
+  </div>
+  <div>
+    <div class="s-eye reveal">Pourquoi nous choisir</div>
+    <h2 class="s-tit reveal">Nos <em>Engagements</em></h2>
+    <div class="why-list">
+      <div class="why-i reveal d1"><div class="why-dot">✦</div><div><h4>Fiabilité & Qualité</h4><p>Code propre, testé et durable — chaque projet livré avec les plus hauts standards.</p></div></div>
+      <div class="why-i reveal d2"><div class="why-dot">✦</div><div><h4>Rapidité d'exécution</h4><p>Projets livrés dans les délais convenus, avec suivi régulier jusqu'à votre satisfaction.</p></div></div>
+      <div class="why-i reveal d3"><div class="why-dot">✦</div><div><h4>Écoute & Proximité</h4><p>Vos besoins au cœur de chaque décision — nous comprenons le marché ivoirien.</p></div></div>
+      <div class="why-i reveal d4"><div class="why-dot">✦</div><div><h4>Confidentialité assurée</h4><p>Données et projets sécurisés — discrétion totale à chaque étape de notre collaboration.</p></div></div>
+    </div>
+  </div>
+</section>
+<div class="gold-div"></div>
+
+<!-- PROCESSUS -->
+<section id="processus">
+  <div class="reveal" style="text-align:center"><div class="s-eye" style="justify-content:center">Comment ça marche</div><h2 class="s-tit">Notre <em>Processus</em></h2><p class="s-sub" style="margin:0 auto">Accompagnement structuré de A à Z pour des résultats prévisibles.</p></div>
+  <div class="proc-grid">
+    <div class="p-step reveal d1"><div class="p-num-w"><span class="p-num">01</span></div><h3>Écoute & Analyse</h3><p>Compréhension de vos besoins lors d'une consultation gratuite et sans engagement.</p></div>
+    <div class="p-step reveal d2"><div class="p-num-w"><span class="p-num">02</span></div><h3>Proposition & Devis</h3><p>Cahier des charges, maquettes et devis transparent livré sous 24 à 48 heures.</p></div>
+    <div class="p-step reveal d3"><div class="p-num-w"><span class="p-num">03</span></div><h3>Développement</h3><p>Réalisation avec démonstrations intermédiaires et points de suivi réguliers.</p></div>
+    <div class="p-step reveal d4"><div class="p-num-w"><span class="p-num">04</span></div><h3>Livraison & Support</h3><p>Mise en ligne, formation et accompagnement post-lancement pour votre autonomie.</p></div>
+  </div>
+</section>
+<div class="gold-div"></div>
+
+<!-- FORMULES -->
+<section id="formules">
+  <div class="reveal"><div class="s-eye">Nos offres</div><h2 class="s-tit">Choisissez votre <em>Formule</em></h2><p class="s-sub">Offres claires et adaptées. Consultation gratuite avant tout engagement.</p></div>
+  <div class="pkg-grid">
+    <div class="pkg reveal d1"><div class="pkg-ico">🌱</div><div class="pkg-name">Starter</div><div class="pkg-sub">Site Vitrine</div><p class="pkg-desc">Idéal pour les indépendants, commerces et associations souhaitant une présence web soignée.</p><div class="pkg-tags"><span class="pkg-tag">Design responsive</span><span class="pkg-tag">Jusqu'à 5 pages</span><span class="pkg-tag">Formulaire contact</span><span class="pkg-tag">SEO de base</span></div><a href="#contact" class="pkg-btn">Demander un devis</a></div>
+    <div class="pkg ft reveal d2"><div class="pkg-ico">🚀</div><div class="pkg-name">Business</div><div class="pkg-sub">Application Web</div><p class="pkg-desc">Pour les PME et startups ayant besoin d'un outil de gestion, d'un dashboard ou d'une plateforme métier.</p><div class="pkg-tags"><span class="pkg-tag">Interface sur mesure</span><span class="pkg-tag">Base de données</span><span class="pkg-tag">Authentification</span><span class="pkg-tag">Admin panel</span><span class="pkg-tag">API intégration</span></div><a href="#contact" class="pkg-btn">Demander un devis</a></div>
+    <div class="pkg reveal d3"><div class="pkg-ico">🛒</div><div class="pkg-name">Commerce</div><div class="pkg-sub">Boutique en ligne</div><p class="pkg-desc">Solution e-commerce complète pour vendre vos produits en ligne avec paiement Mobile Money.</p><div class="pkg-tags"><span class="pkg-tag">Catalogue produits</span><span class="pkg-tag">Panier & commandes</span><span class="pkg-tag">Mobile Money</span><span class="pkg-tag">Dashboard vendeur</span></div><a href="#contact" class="pkg-btn">Demander un devis</a></div>
+  </div>
+</section>
+<div class="gold-div"></div>
+
+<!-- ── SECTION #atouts SUPPRIMÉE (doublon exact de #pourquoi) ── -->
+
+<!-- CONTACT -->
+<section id="contact" style="padding:110px 60px">
+  <div>
+    <div class="s-eye reveal">Travaillons ensemble</div>
+    <h2 class="c-tit reveal">Démarrons votre<br><em>projet digital</em></h2>
+    <p class="c-desc reveal">Consultation gratuite · Devis sous 24h · Aucun engagement.</p>
+    <div class="c-items">
+      <div class="c-item reveal d1"><div class="c-ico">📍</div><div><strong>Localisation</strong><span>Abidjan, Côte d'Ivoire</span></div></div>
+      <div class="c-item reveal d2"><div class="c-ico">📱</div><div><strong>Téléphone / WhatsApp</strong><a href="https://wa.me/2250759142599">+225 07 59 14 25 99</a></div></div>
+      <div class="c-item reveal d3"><div class="c-ico">✉️</div><div><strong>Email</strong><a href="mailto:contact@nexadevci.com">contact@nexadevci.com</a></div></div>
+      <!-- FIX : lien www.nexadevci.com cliquable -->
+      <div class="c-item reveal d4"><div class="c-ico">🌐</div><div><strong>Site Web</strong><a href="https://www.nexadevci.com" target="_blank" rel="noopener">www.nexadevci.com</a></div></div>
+    </div>
+  </div>
+  <div class="reveal">
+    <!-- FIX : type="submit" + keydown Enter -->
+    <form class="c-form" id="cForm" onsubmit="handleSubmit(event)">
+      <div class="f-row">
+        <div class="f-grp"><label class="f-lbl" for="fNom">Votre nom *</label><input type="text" id="fNom" placeholder="Ex: Jean Kouassi" required minlength="2" maxlength="100"></div>
+        <div class="f-grp"><label class="f-lbl" for="fEmail">Votre email *</label><input type="email" id="fEmail" placeholder="email@exemple.com" required maxlength="150"></div>
+      </div>
+      <div class="f-grp"><label class="f-lbl" for="fTel">Téléphone / WhatsApp</label><input type="tel" id="fTel" placeholder="+225 XX XX XX XX XX" maxlength="20"></div>
+      <div class="f-grp">
+        <label class="f-lbl" for="fType">Type de projet *</label>
+        <select id="fType" required>
+          <option value="">Sélectionnez...</option>
+          <option value="Site Web Professionnel">Site Web Professionnel</option>
+          <option value="Application Web">Application Web</option>
+          <option value="Boutique E-Commerce">Boutique E-Commerce</option>
+          <option value="Design UI/UX">Design UI/UX</option>
+          <option value="Maintenance & Support">Maintenance &amp; Support</option>
+          <option value="Conseil Digital">Conseil Digital</option>
+        </select>
+      </div>
+      <div class="f-grp"><label class="f-lbl" for="fMsg">Décrivez votre projet *</label><textarea id="fMsg" placeholder="Parlez-nous de votre idée, vos objectifs..." required minlength="20" maxlength="2000"></textarea></div>
+      <button type="submit" class="f-btn" id="fBtn"><span id="fBtnTxt">Envoyer ma demande →</span></button>
+      <div class="f-ok" id="fOk">✦ Message envoyé ! Nous vous répondons sous 24h.</div>
+      <div class="f-err" id="fErr">❌ Une erreur est survenue. Veuillez réessayer.</div>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <a href="#hero" class="f-logo">Nexa<span>Dev</span> CI</a>
+  <!-- FIX : copyright mis à jour 2026 -->
+  <span class="f-copy">© 2026 NexaDev CI · Tous droits réservés</span>
+  <div class="f-links">
+    <a href="#services" class="f-lnk">Services</a>
+    <a href="#processus" class="f-lnk">Processus</a>
+    <a href="#formules" class="f-lnk">Formules</a>
+    <a href="#contact" class="f-lnk">Contact</a>
+  </div>
+</footer>
+
+<script>
+// ── CONFIGURATION SUPABASE ──────────────────────────────
+const SUPABASE_URL  = 'https://isqcriybbddzjwsjnetl.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzcWNyaXliYmRkemp3c2puZXRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NDcxMjIsImV4cCI6MjA5MDEyMzEyMn0.pYiWcPRu-oO7a1hfmF8TrCqpm8CrvHNlE6QA46La2-M';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ── CURSEUR (FIX : renommage pour éviter conflit avec variable 'cur') ─────
+const curDot  = document.getElementById('curDot');
+const curRing = document.getElementById('curRing');
+let mx=0, my=0, rx=0, ry=0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  curDot.style.transform = `translate(${mx}px,${my}px) translate(-50%,-50%)`;
+});
+
+(function animRing(){
+  rx += (mx - rx) * .12;
+  ry += (my - ry) * .12;
+  curRing.style.transform = `translate(${rx}px,${ry}px) translate(-50%,-50%)`;
+  requestAnimationFrame(animRing);
+})();
+
+document.querySelectorAll('a,button,select,.srv-card,.pkg,.why-i').forEach(el => {
+  el.addEventListener('mouseenter', () => curRing.classList.add('h'));
+  el.addEventListener('mouseleave', () => curRing.classList.remove('h'));
+});
+
+// ── NAVBAR ───────────────────────────────────────────────
+const navEl = document.getElementById('nav');
+window.addEventListener('scroll', () => navEl.classList.toggle('sc', scrollY > 50));
+
+// ── SCROLL REVEAL ────────────────────────────────────────
+const revealObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('v'); });
+}, { threshold: .1 });
+document.querySelectorAll('.reveal').forEach(r => revealObs.observe(r));
+
+// ── COUNT UP (FIX : chaque compteur géré indépendamment + déclenché aussi au chargement) ──
+function runCounter(el) {
+  if (el.dataset.done) return;
+  el.dataset.done = 'true';
+  const target = +el.dataset.to;
+  const duration = 1400;
+  const steps = duration / 16;
+  const step = target / steps;
+  let n = 0;
+  const timer = setInterval(() => {
+    n += step;
+    if (n >= target) { el.textContent = target; clearInterval(timer); }
+    else el.textContent = Math.floor(n);
+  }, 16);
+}
+
+// Observer dédié aux compteurs
+const cntObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) runCounter(e.target);
+  });
+}, { threshold: .1 });
+
+document.querySelectorAll('.s-num[data-to]').forEach(el => cntObs.observe(el));
+
+// ── ENREGISTREMENT VISITE ────────────────────────────────
+async function logVisite() {
+  try {
+    await sb.from('visites').insert({
+      page: location.pathname || '/',
+      referrer: document.referrer || null,
+      user_agent: navigator.userAgent
+    });
+  } catch(e) { /* silencieux */ }
+}
+logVisite();
+
+// ── ENVOI FORMULAIRE CONTACT ─────────────────────────────
+let lastSubmitTime = 0;
+
+async function handleSubmit(e) {
+  e.preventDefault();
+
+  // Anti-spam : 30 secondes entre deux envois
+  const now = Date.now();
+  if (now - lastSubmitTime < 30000) {
+    showErr('Veuillez patienter 30 secondes avant de renvoyer.'); return;
+  }
+
+  const nom   = sanitize(document.getElementById('fNom').value.trim());
+  const email = document.getElementById('fEmail').value.trim();
+  const tel   = sanitize(document.getElementById('fTel').value.trim());
+  const type  = document.getElementById('fType').value;
+  const msg   = sanitize(document.getElementById('fMsg').value.trim());
+
+  // Validation JS (complète le required HTML)
+  if (!nom || nom.length < 2)            { showErr('Veuillez entrer votre nom complet.'); return; }
+  if (!validateEmail(email))             { showErr('Adresse email invalide.'); return; }
+  if (!type)                             { showErr('Veuillez sélectionner un type de projet.'); return; }
+  if (!msg || msg.length < 20)           { showErr('Le message doit contenir au moins 20 caractères.'); return; }
+  if (msg.length > 2000)                 { showErr('Le message est trop long (max 2000 caractères).'); return; }
+
+  setBtnLoading(true);
+  try {
+    const { error } = await sb.from('contacts').insert({
+      nom,
+      email,
+      telephone: tel || null,
+      type_projet: type,
+      message: msg
+    });
+    if (error) throw error;
+
+    lastSubmitTime = now;
+    document.getElementById('cForm').reset();
+    showOk();
+  } catch(err) {
+    console.error('Supabase error:', err);
+    showErr('Erreur de connexion. Contactez-nous directement au +225 07 59 14 25 99.');
+  } finally {
+    setBtnLoading(false);
+  }
+}
+
+function sanitize(str) {
+  return str.replace(/<[^>]*>/g, '').replace(/[<>"'&]/g, '').substring(0, 500);
+}
+function validateEmail(e) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+}
+function setBtnLoading(on) {
+  const btn = document.getElementById('fBtn');
+  const txt = document.getElementById('fBtnTxt');
+  btn.disabled = on;
+  txt.textContent = on ? 'Envoi en cours...' : 'Envoyer ma demande →';
+}
+function showOk() {
+  document.getElementById('fOk').style.display = 'block';
+  document.getElementById('fErr').style.display = 'none';
+  setTimeout(() => document.getElementById('fOk').style.display = 'none', 6000);
+}
+function showErr(msg) {
+  const el = document.getElementById('fErr');
+  el.textContent = '❌ ' + msg;
+  el.style.display = 'block';
+  document.getElementById('fOk').style.display = 'none';
+  setTimeout(() => el.style.display = 'none', 6000);
+}
+
+// ── ACTIVE NAV LINK ──────────────────────────────────────
+const sections = document.querySelectorAll('section[id]');
+window.addEventListener('scroll', () => {
+  let activeSec = '';
+  sections.forEach(s => { if (scrollY >= s.offsetTop - 120) activeSec = s.id; });
+  document.querySelectorAll('.n-link').forEach(l => {
+    l.style.color = l.getAttribute('href') === '#' + activeSec ? 'var(--or)' : '';
+  });
+});
+</script>
+</body>
